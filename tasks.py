@@ -5,6 +5,7 @@ from typing import List
 import discord
 from discord.ext import commands, tasks
 
+import settings
 from deal import get_deals, get_embed_from_deal, Deal
 
 guilds_running_tasks: dict = {}
@@ -15,6 +16,7 @@ async def send_deals_to_channel(deals_list: List[Deal],
     if len(deals_list) == 0:
         return
     await channel.purge()
+    await asyncio.sleep(1)  # This is due to the Discord sometimes not clearing the channel.
     await channel.send(content=f"```Last updated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}```")
     await channel.send(content=f"```Here's a list of {len(deals_list)} new deals!```")
     for deal in deals_list:
@@ -49,21 +51,16 @@ async def send_deals_to_channels(deals_list: List[Deal],
 
 
 async def create_missing_channels(guild: discord.Guild):
-    if not discord.utils.find(lambda c: c.name == 'games deals', guild.categories):
-        category = await guild.create_category(name='games deals')
+    if not discord.utils.find(lambda c: c.name == settings.CATEGORY, guild.categories):
+        category = await guild.create_category(name=settings.CATEGORY)
     else:
-        category = discord.utils.get(guild.categories, name='games deals')
-    bot_role = discord.utils.get(guild.roles, name='GamesDeals')
+        category = discord.utils.get(guild.categories, name=settings.CATEGORY)
+    bot_role = discord.utils.get(guild.roles, name=settings.BOT_ROLE_NAME)
     await category.set_permissions(guild.default_role, send_messages=False)
     await category.set_permissions(bot_role, send_messages=True)
-    if not discord.utils.find(lambda c: c.name == 'steam-deals' and c.category_id == category.id, guild.channels):
-        await guild.create_text_channel(name='steam-deals', category=category)
-    if not discord.utils.find(lambda c: c.name == 'steam-deals-aaa' and c.category_id == category.id, guild.channels):
-        await guild.create_text_channel(name='steam-deals-aaa', category=category)
-    if not discord.utils.find(lambda c: c.name == 'gog-deals' and c.category_id == category.id, guild.channels):
-        await guild.create_text_channel(name='gog-deals', category=category)
-    if not discord.utils.find(lambda c: c.name == 'gog-deals-aaa' and c.category_id == category.id, guild.channels):
-        await guild.create_text_channel(name='gog-deals-aaa', category=category)
+    for channel in settings.CHANNELS:
+        if not discord.utils.find(lambda c: c.name == channel and c.category_id == category.id, guild.channels):
+            await guild.create_text_channel(name=channel, category=category)
 
 
 async def deals_task(guild: discord.Guild,
@@ -74,11 +71,11 @@ async def deals_task(guild: discord.Guild,
         guilds_running_tasks[guild.id] = [deals_task.__name__]
 
     try:
-        category = discord.utils.get(guild.categories, name='games deals')
-        steam_channel = discord.utils.get(guild.channels, name='steam-deals', category=category)
-        steam_aaa_channel = discord.utils.get(guild.channels, name='steam-deals-aaa', category=category)
-        gog_channel = discord.utils.get(guild.channels, name='gog-deals', category=category)
-        gog_aaa_channel = discord.utils.get(guild.channels, name='gog-deals-aaa', category=category)
+        category = discord.utils.get(guild.categories, name=settings.CATEGORY)
+        steam_channel = discord.utils.get(guild.channels, name=settings.STEAM_CHANNEL, category=category)
+        steam_aaa_channel = discord.utils.get(guild.channels, name=settings.STEAM_AAA_CHANNEL, category=category)
+        gog_channel = discord.utils.get(guild.channels, name=settings.GOG_CHANNEL, category=category)
+        gog_aaa_channel = discord.utils.get(guild.channels, name=settings.GOG_AAA_CHANNEL, category=category)
 
         await send_deals_to_channels(deals_list,
                                      steam_channel,
