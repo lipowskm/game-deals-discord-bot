@@ -97,7 +97,8 @@ async def get_random_deal(min_price: int = None) -> Deal:
 
     while True:
         request = await session.get(url)
-        if (response_list := await request.json()) is None:
+        response_list = await request.json()
+        if len(response_list) == 0:
             continue
         record = response_list[0]
         deal = Deal(record)
