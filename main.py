@@ -35,7 +35,7 @@ async def on_ready():
     logging.info('Bot started')
 
 
-logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG)
+logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.ERROR)
 bot.add_cog(ScheduledTasks(bot))
 bot.add_cog(Commands(bot))
 if settings.PRODUCTION:
