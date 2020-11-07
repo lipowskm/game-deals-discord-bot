@@ -1,0 +1,16 @@
+aiohttp==3.7.2
+async-timeout==3.0.1
+attrs==20.2.0
+chardet==3.0.4
+croniter==0.3.36
+discord.py==1.5.1
+idna==2.10
+multidict==5.0.0
+natsort==7.0.1
+python-dateutil==2.8.1
+python-decouple==3.3
+pytz==2020.4
+six==1.15.0
+typing-extensions==3.7.4.3
+tzlocal==2.1
+yarl==1.6.2
