@@ -36,4 +36,7 @@ async def on_ready():
 
 bot.add_cog(ScheduledTasks(bot))
 bot.add_cog(Commands(bot))
-bot.run(settings.BOT_TOKEN)
+if settings.PRODUCTION:
+    bot.run(settings.BOT_TOKEN)
+else:
+    bot.run(settings.BOT_TOKEN_DEV)
