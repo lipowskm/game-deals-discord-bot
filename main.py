@@ -2,6 +2,7 @@ from commands import Commands
 import settings
 from deal import get_deals
 from tasks import deals_task, create_missing_channels, ScheduledTasks
+import logging
 
 import discord
 from discord.ext import commands
@@ -11,7 +12,7 @@ bot = commands.Bot(command_prefix=settings.PREFIX + ' ')
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):
-    print(f'Joined guild {guild.name}')
+    logging.info(f'Joined guild {guild.name}')
     await create_missing_channels(guild)
     deals_list = await get_deals()
     await deals_task(guild, deals_list)
@@ -31,9 +32,10 @@ async def on_command_error(ctx: commands.Context, error):
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=discord.Game(f"Listening on {settings.PREFIX}"))
-    print('Bot started')
+    logging.info('Bot started')
 
 
+logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG)
 bot.add_cog(ScheduledTasks(bot))
 bot.add_cog(Commands(bot))
 if settings.PRODUCTION:

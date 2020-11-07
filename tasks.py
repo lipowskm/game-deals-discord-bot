@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import datetime
 from typing import List
 
@@ -84,9 +85,9 @@ async def deals_task(guild: discord.Guild,
                                      gog_aaa_channel)
 
     except discord.errors.Forbidden:
-        print(f'Insufficient permissions to send messages or bot has been removed from {guild}')
+        logging.error(f'Insufficient permissions to send messages or bot has been removed from {guild}')
     except discord.errors.NotFound:
-        print(f'Channel has been deleted while the bot was working on {guild}')
+        logging.error(f'Channel has been deleted while the bot was working on {guild}')
         await create_missing_channels(guild)
     guilds_running_tasks[guild.id].remove(deals_task.__name__)
 

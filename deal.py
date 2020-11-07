@@ -84,7 +84,7 @@ async def get_deals(store: str = 'all',
 
 
 async def get_random_deal(min_price: int = None) -> Deal:
-    url = f'https://www.cheapshark.com/api/1.0/deals' \
+    url = f'{settings.API_BASE_URL}' \
           f'?storeID=1,7' \
           f'&sortBy=Metacritic' \
           f'&onSale=1' \
