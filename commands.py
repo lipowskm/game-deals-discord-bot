@@ -6,7 +6,7 @@ from discord.ext import commands
 
 import strings
 from deal import get_embed_from_deal, NoDealsFound, get_random_deal, get_deals
-from tasks import guilds_running_tasks, deals_task
+from tasks import guilds__running_tasks, deals_task
 
 
 class Commands(commands.Cog):
@@ -23,8 +23,8 @@ class Commands(commands.Cog):
             store = 'all'
         except ValueError:
             pass
-        if ctx.guild.id in guilds_running_tasks.keys() and \
-                deals_task.__name__ in guilds_running_tasks[ctx.guild.id]:
+        if ctx.guild.id in guilds__running_tasks.keys() and \
+                deals_task.__name__ in guilds__running_tasks[ctx.guild.id]:
             await ctx.send('```fix\nBot is already updating, please wait...```')
             return
         if deals_amount > 200:

@@ -17,18 +17,18 @@ class NoDealsFound(Exception):
 
 
 class Deal:
-    def __init__(self, record: dict):
-        self.title = record['title']
-        self.store_id = record['storeID']
-        self.sale_price = float(record['salePrice'])
-        self.normal_price = float(record['normalPrice'])
-        self.saved_percentage = round(float(record['savings']))
-        self.saved_amount = round(float(self.normal_price) - float(self.sale_price), 2)
-        self.metacritic_score = int(record['metacriticScore'])
-        self.steam_reviews_percent = int(record['steamRatingPercent'])
-        self.steam_reviews_count = int(record['steamRatingCount'])
-        self.steam_app_id = record['steamAppID']
-        self.thumbnail_url = record['thumb']
+    def __init__(self, **args):
+        self.title = args.pop('title', None)
+        self.store_id = args.pop('storeID', None)
+        self.sale_price = float(args.pop('salePrice', 0))
+        self.normal_price = float(args.pop('normalPrice', 0))
+        self.saved_percentage = round(float(args.pop('savings', 0)))
+        self.saved_amount = round(self.normal_price - self.sale_price, 2)
+        self.metacritic_score = args.pop('metacriticScore', None)
+        self.steam_reviews_percent = args.pop('steamRatingPercent', None)
+        self.steam_reviews_count = args.pop('steamRatingCount', None)
+        self.steam_app_id = args.pop('steamAppID', None)
+        self.thumbnail_url = args.pop('thumb', None)
 
 
 stores_mapping = {
@@ -75,7 +75,7 @@ async def get_deals(store: str = 'all',
         for i, record in enumerate(response_list):
             if 60 > amount == i:
                 break
-            deal = Deal(record)
+            deal = Deal(**record)
             deals_list.append(deal)
         url = url.replace(f'&pageNumber={e}', f'&pageNumber={e + 1}')
         amount = amount - 60
@@ -101,7 +101,7 @@ async def get_random_deal(min_price: int = None) -> Deal:
         if len(response_list) == 0:
             continue
         record = response_list[0]
-        deal = Deal(record)
+        deal = Deal(**record)
         await session.close()
         return deal
 

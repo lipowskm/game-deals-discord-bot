@@ -9,7 +9,7 @@ from discord.ext import commands, tasks
 import settings
 from deal import get_deals, get_embed_from_deal, Deal
 
-guilds_running_tasks: dict = {}
+guilds__running_tasks: dict = {}
 
 
 async def send_deals_to_channel(deals_list: List[Deal],
@@ -56,8 +56,12 @@ async def create_missing_channels(guild: discord.Guild):
         category = await guild.create_category(name=settings.CATEGORY)
     else:
         category = discord.utils.get(guild.categories, name=settings.CATEGORY)
-    bot_role = discord.utils.get(guild.roles, name=settings.BOT_ROLE_NAME)
-    await category.set_permissions(guild.default_role, send_messages=False)
+    if settings.PRODUCTION:
+        bot_role = discord.utils.get(guild.roles, name=settings.BOT_ROLE_NAME)
+    else:
+        bot_role = discord.utils.get(guild.roles, name=settings.BOT_ROLE_NAME_DEV)
+    for role in guild.roles:
+        await category.set_permissions(role, send_messages=False)
     await category.set_permissions(bot_role, send_messages=True)
     for channel in settings.CHANNELS:
         if not discord.utils.find(lambda c: c.name == channel and c.category_id == category.id, guild.channels):
@@ -66,10 +70,10 @@ async def create_missing_channels(guild: discord.Guild):
 
 async def deals_task(guild: discord.Guild,
                      deals_list: List[Deal]):
-    if guild.id in guilds_running_tasks.keys():
-        guilds_running_tasks[guild.id].append(deals_task.__name__)
+    if guild.id in guilds__running_tasks.keys():
+        guilds__running_tasks[guild.id].append(deals_task.__name__)
     else:
-        guilds_running_tasks[guild.id] = [deals_task.__name__]
+        guilds__running_tasks[guild.id] = [deals_task.__name__]
 
     try:
         category = discord.utils.get(guild.categories, name=settings.CATEGORY)
@@ -89,7 +93,7 @@ async def deals_task(guild: discord.Guild,
     except discord.errors.NotFound:
         logging.error(f'Channel has been deleted while the bot was working on {guild}')
         await create_missing_channels(guild)
-    guilds_running_tasks[guild.id].remove(deals_task.__name__)
+    guilds__running_tasks[guild.id].remove(deals_task.__name__)
 
 
 class ScheduledTasks(commands.Cog):
@@ -100,8 +104,8 @@ class ScheduledTasks(commands.Cog):
     @tasks.loop(minutes=60)
     async def deals_schedule(self):
         if datetime.now().hour == 12:
-            steam_deals_list = await get_deals(amount=200, store='steam')
-            gog_deals_list = await get_deals(amount=200, store='gog')
+            steam_deals_list = await get_deals(amount=settings.STEAM_DEALS_AMOUNT, store='steam')
+            gog_deals_list = await get_deals(amount=settings.GOG_DEALS_AMOUNT, store='gog')
             coroutines = [deals_task(guild,
                                      steam_deals_list +
                                      gog_deals_list) for guild in self.bot.guilds]
