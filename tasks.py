@@ -56,16 +56,13 @@ async def create_missing_channels(guild: discord.Guild):
         category = await guild.create_category(name=settings.CATEGORY)
     else:
         category = discord.utils.get(guild.categories, name=settings.CATEGORY)
-    if settings.PRODUCTION:
-        bot_role = discord.utils.get(guild.roles, name=settings.BOT_ROLE_NAME)
-    else:
-        bot_role = discord.utils.get(guild.roles, name=settings.BOT_ROLE_NAME_DEV)
     for role in guild.roles:
         await category.set_permissions(role, send_messages=False)
-    await category.set_permissions(bot_role, send_messages=True)
+    await category.set_permissions(guild.me, send_messages=True)
+
     for channel in settings.CHANNELS:
         if not discord.utils.find(lambda c: c.name == channel and c.category_id == category.id, guild.channels):
-            await guild.create_text_channel(name=channel, category=category)
+            channel = await guild.create_text_channel(name=channel, category=category)
 
 
 async def deals_task(guild: discord.Guild,

@@ -1,8 +1,6 @@
 from decouple import config
 
 API_BASE_URL = config('API_BASE_URL')
-BOT_ROLE_NAME = config('BOT_ROLE_NAME')
-BOT_ROLE_NAME_DEV = config('BOT_ROLE_NAME_DEV')
 BOT_TOKEN = config('BOT_TOKEN')
 BOT_TOKEN_DEV = config('BOT_TOKEN_DEV')
 PREFIX = config('PREFIX')
