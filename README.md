@@ -10,6 +10,10 @@ The main priority in creating this bot was to minimize effort the user has to ma
 
 It has it's own schedule, so everyday at the same hour (between 12:00 UTC and 13:00 UTC) it cleans the channels and posts new deals there. That way anyone who enters the channel will only see deals that are still available for purchase.
 
+<p align="center">
+  <img src=https://i.imgur.com/c7xNGn8.gif width="480" height="480">
+</p>
+
 Because Discord is somewhat of a limited frontend, the bot is also limited in amount of deals it can display. That's why it posts deals sorted by [Metacritic](https://www.metacritic.com) rating, so the user always sees the best possible deals.
 
 ### Built With
@@ -17,3 +21,11 @@ Because Discord is somewhat of a limited frontend, the bot is also limited in am
 * [discord.py](https://pypi.org/project/discord.py)
 * [aiohttp](https://pypi.org/project/aiohttp)
 * [CheapShark API](https://apidocs.cheapshark.com)
+
+## Examples
+
+### Flip command
+<img src=https://i.imgur.com/ZuYLZEl.gif width="480" height="326">
+
+### Random command
+<img src=https://i.imgur.com/mivYnRt.gif width="480" height="326">
