@@ -12,7 +12,6 @@ class CRUDBase(Generic[ModelType]):
 
         **Parameters**
         * `model`: A SQLAlchemy model class
-        * `schema`: A Pydantic model (schema) class
         """
         self.model = model
 
@@ -20,23 +19,33 @@ class CRUDBase(Generic[ModelType]):
         """Return single record from given object ID.
 
         :param id: Database object id.
-        :return: asyncpg Record object containing data.
+        :return: Record object containing data.
         """
         query = self.model.__table__.select().where(id == self.model.id)
         return await database.fetch_one(query=query)
 
     async def get_by_discord_id(self, discord_id: int) -> Record:
+        """Return single record from given object discord ID.
+
+        :param discord_id: Database object discord_id.
+        :return: Record object containing data.
+        """
         query = self.model.__table__.select().where(discord_id == self.model.discord_id)
         return await database.fetch_one(query=query)
 
     async def get_by_name(self, name: str) -> Record:
+        """Return single record from given object name.
+
+        :param name Database object name.
+        :return: Record object containing data.
+        """
         query = self.model.__table__.select().where(name == self.model.name)
         return await database.fetch_one(query=query)
 
     async def get_all(self) -> List[Record]:
         """Return list of all records.
 
-        :return: List of asyncpg Record objects containing data.
+        :return: List of Records objects containing data.
         """
         query = self.model.__table__.select()
         return await database.fetch_all(query=query)
