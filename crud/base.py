@@ -25,6 +25,14 @@ class CRUDBase(Generic[ModelType]):
         query = self.model.__table__.select().where(id == self.model.id)
         return await database.fetch_one(query=query)
 
+    async def get_by_discord_id(self, discord_id: int) -> Record:
+        query = self.model.__table__.select().where(discord_id == self.model.discord_id)
+        return await database.fetch_one(query=query)
+
+    async def get_by_name(self, name: str) -> Record:
+        query = self.model.__table__.select().where(name == self.model.name)
+        return await database.fetch_one(query=query)
+
     async def get_all(self) -> List[Record]:
         """Return list of all records.
 

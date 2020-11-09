@@ -1,5 +1,4 @@
 import discord
-from asyncpg import Record
 
 from crud.base import CRUDBase
 from database.models import Guild
@@ -7,10 +6,6 @@ from database.session import database
 
 
 class CRUDGuild(CRUDBase[Guild]):
-    async def get_by_name(self, name: str) -> Record:
-        query = self.model.__table__.select().where(name == self.model.name)
-        return await database.fetch_one(query=query)
-
     async def create(self, obj_in: discord.Guild) -> int:
         """Create record in database from discord.Guild class object.
 

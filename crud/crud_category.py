@@ -1,5 +1,5 @@
 import discord
-from asyncpg import Record
+from typing import Union
 
 import crud
 from crud.base import CRUDBase
@@ -8,21 +8,20 @@ from database.session import database
 
 
 class CRUDCategory(CRUDBase[Category]):
-    async def get_by_name(self, name: str) -> Record:
-        query = self.model.__table__.select().where(name == self.model.name)
-        return await database.fetch_one(query=query)
-
     async def create_with_relationship(self,
                                        category_in: discord.CategoryChannel,
-                                       guild_in: discord.Guild) -> int:
+                                       guild_in: Union[discord.Guild, int]) -> int:
         """Create record in database from discord.CategoryChannel class object with relationship to provided guild.
         If the guild is not in database, it is created first.
 
         :param category_in: discord.CategoryChannel object.
-        :param guild_in: discord.Guild object
+        :param guild_in: discord.Guild object or ID of the guild in the database.
         :return: id of created object.
         """
-        guild = await crud.guild.get_by_name(guild_in.name)
+        if type(guild_in) == discord.Guild:
+            guild = await crud.guild.get_by_name(guild_in.name)
+        else:
+            guild = await crud.guild.get(guild_in)
         if not guild:
             db_guild_id = await crud.guild.create(guild_in)
         else:

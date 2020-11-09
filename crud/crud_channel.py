@@ -1,19 +1,15 @@
 from typing import List
 
 import discord
-from asyncpg import Record
+from typing import Union
 
 import crud
 from crud.base import CRUDBase
-from database.models import Channel, Category
+from database.models import Channel
 from database.session import database
 
 
 class CRUDChannel(CRUDBase[Channel]):
-    async def get_by_name(self, name: str) -> Record:
-        query = self.model.__table__.select().where(name == self.model.name)
-        return await database.fetch_one(query=query)
-
     async def create(self, obj_in: discord.TextChannel) -> int:
         """Create record in database from discord.TextChannel class object.
 
@@ -29,17 +25,20 @@ class CRUDChannel(CRUDBase[Channel]):
 
     async def bulk_create(self,
                           channels_in: List[discord.TextChannel],
-                          category_in: discord.CategoryChannel,
-                          guild_in: discord.Guild) -> None:
+                          category_in: Union[discord.CategoryChannel, int],
+                          guild_in: Union[discord.Guild, int]) -> None:
         """Create multiple records in database from discord.TextChannel class objects.
         It requires proving a category and guild to create relationships.
 
         :param channels_in: List of discord.TextChannel object.
-        :param category_in: discord.CategoryChannel object.
-        :param guild_in: discord.CategoryChannel object.
+        :param category_in: discord.CategoryChannel object or ID of category in database.
+        :param guild_in: discord.Guild object or ID of guild in database.
         :return: None.
         """
-        category = await crud.category.get_by_name(category_in.name)
+        if type(category_in) == discord.CategoryChannel:
+            category = await crud.category.get_by_name(category_in.name)
+        else:
+            category = await crud.category.get(category_in)
         if not category:
             db_category_id = await crud.category.create_with_relationship(category_in, guild_in)
         else:
