@@ -8,11 +8,12 @@ import yaml
 from discord.ext import commands, tasks
 import settings
 from deal import get_deals, get_embed_from_deal, Deal
+from utils import update_guild_config
 
 guilds__running_tasks: dict = {}
 
 
-async def create_missing_channels(guild: discord.Guild) -> (discord.CategoryChannel, List[discord.TextChannel]):
+async def initialize_channels(guild: discord.Guild) -> (discord.CategoryChannel, List[discord.TextChannel]):
     if not discord.utils.find(lambda c: c.name == settings.CATEGORY, guild.categories):
         category = await guild.create_category(name=settings.CATEGORY)
     else:
@@ -94,22 +95,12 @@ class ScheduledTasks(commands.Cog):
             await channel.send(content=f"```That's it for today :(```")
         except discord.errors.NotFound:
             logging.error(f'Channel {channel.name} has been deleted while the bot was working on {channel.guild}')
-            category, channels = await create_missing_channels(channel.guild)
-            with open('config.yaml', 'r') as f:
-                config = yaml.load(f, Loader=yaml.FullLoader)
-                guild_config = {
-                    channel.guild.id: {
-                        'category': category.id,
-                        'channels': {channel.name: channel.id for channel in channels},
-                        'auto': config[channel.guild.id]['auto'],
-                        'time': config[channel.guild.id]['time']
-                    }
-                }
-                config.update(guild_config)
-                new_channel_id = config[channel.guild.id]['channels'][channel.name]
-            with open('config.yaml', 'w') as f:
-                yaml.safe_dump(config, stream=f)
-                logging.info(f'Updated config.yaml for guild {channel.guild.name}')
+            category, channels = await initialize_channels(channel.guild)
+            config = update_guild_config(filename='config.yaml',
+                                         guild=channel.guild,
+                                         category=category,
+                                         channels=channels)
+            new_channel_id = config[channel.guild.id]['channels'][channel.name]
             await self.send_deals_to_channel(deals_list, self.bot.get_channel(new_channel_id))
 
     async def send_deals_to_channels(self,

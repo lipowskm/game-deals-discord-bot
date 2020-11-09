@@ -1,7 +1,8 @@
 from commands import Commands
 import settings
 from deal import get_deals
-from tasks import create_missing_channels, ScheduledTasks
+from tasks import initialize_channels, ScheduledTasks
+from utils import update_guild_config
 import logging
 import yaml
 
@@ -14,24 +15,11 @@ bot = commands.Bot(command_prefix=settings.PREFIX + ' ')
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     logging.info(f'Joined guild {guild.name}')
-    category, channels = await create_missing_channels(guild)
-    with open('config.yaml', 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-        guild_config = {
-            guild.id: {
-                'category': category.id,
-                'channels': {channel.name: channel.id for channel in channels},
-                'auto': True,
-                'time': 12
-            }
-        }
-        if config:
-            config.update(guild_config)
-        else:
-            config = guild_config
-    with open('config.yaml', 'w') as f:
-        yaml.safe_dump(config, stream=f)
-        logging.info(f'Updated config.yaml for guild {guild.name}')
+    category, channels = await initialize_channels(guild)
+    update_guild_config(filename='config.yaml',
+                        guild=guild,
+                        category=category,
+                        channels=channels)
     deals_list = await get_deals()
     scheduled_tasks_cog: ScheduledTasks = await bot.get_cog("ScheduledTasks")
     await scheduled_tasks_cog.deals_task(guild, deals_list)
