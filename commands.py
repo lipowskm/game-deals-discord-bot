@@ -6,12 +6,13 @@ from discord.ext import commands
 
 import strings
 from deal import get_embed_from_deal, NoDealsFound, get_random_deal, get_deals
-from tasks import guilds__running_tasks, deals_task
+from tasks import guilds__running_tasks, ScheduledTasks
 
 
 class Commands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
+        self.scheduled_tasks_cog: ScheduledTasks = self.bot.get_cog('ScheduledTasks')
 
     @commands.command(name='update',
                       brief=strings.COMMAND_UPDATE_BRIEF,
@@ -24,7 +25,7 @@ class Commands(commands.Cog):
         except ValueError:
             pass
         if ctx.guild.id in guilds__running_tasks.keys() and \
-                deals_task.__name__ in guilds__running_tasks[ctx.guild.id]:
+                self.scheduled_tasks_cog.deals_task.__name__ in guilds__running_tasks[ctx.guild.id]:
             await ctx.send('```fix\nBot is already updating, please wait...```')
             return
         if deals_amount > 200:
@@ -34,7 +35,7 @@ class Commands(commands.Cog):
             if store in ['steam', 'gog', 'all']:
                 await ctx.send(f'```Started updating daily deals for {store.capitalize()}```')
                 deals_list = await get_deals(amount=deals_amount, store=store)
-                await deals_task(ctx.guild, deals_list)
+                await self.scheduled_tasks_cog.deals_task(ctx.guild, deals_list)
                 await ctx.send(f'```{store.capitalize()} deals have been updated with {len(deals_list)} positions```')
             else:
                 raise discord.ext.commands.BadArgument
@@ -60,10 +61,28 @@ class Commands(commands.Cog):
     @commands.command(name='random',
                       brief=strings.COMMAND_RANDOM_BRIEF,
                       description=strings.COMMAND_RANDOM_DESC)
-    async def random(self, ctx: commands.Context):
-        deal = await get_random_deal()
-        await ctx.send(content=f"Here's a random deal for you, **{ctx.message.author.name}**!",
+    async def random(self, ctx: commands.Context, min_price: int = 0):
+        try:
+            deal = await get_random_deal(min_price)
+        except NoDealsFound:
+            await ctx.send(content='```Unable to find random deal with provided minimum discount price```')
+            return
+        await ctx.send(content=f"Here's a random deal for you, **{ctx.author.name}**!",
                        embed=get_embed_from_deal(deal))
+
+    @random.error
+    async def random_handler(self, ctx, error):
+        """A local Error Handler for random command.
+        """
+
+        if isinstance(error, discord.ext.commands.BadArgument):
+            await ctx.channel.send('```fix\n'
+                                   'Invalid option\n'
+                                   'Option must be an integer\n\n'
+                                   'Possible options:\n'
+                                   f'{settings.PREFIX} random [min_price]\n\n'
+                                   'Example:\n'
+                                   f'{settings.PREFIX} random 5```')
 
     @commands.command(name='flip',
                       brief=strings.COMMAND_FLIP_BRIEF,

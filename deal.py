@@ -1,4 +1,5 @@
 from typing import List
+from dataclasses import dataclass
 
 import aiohttp
 import discord
@@ -9,33 +10,57 @@ from utils import calculate_pages, colour_picker, replace_all
 
 
 class NoDealsFound(Exception):
-    """
-
-    Exception handling when no deals are found in the API.
+    """Exception to raise when no deals are found in the API.
     """
     pass
 
 
+@dataclass
 class Deal:
-    def __init__(self, **args):
-        self.title = args.pop('title', None)
-        self.store_id = args.pop('storeID', None)
-        self.sale_price = float(args.pop('salePrice', 0))
-        self.normal_price = float(args.pop('normalPrice', 0))
-        self.saved_percentage = round(float(args.pop('savings', 0)))
-        self.saved_amount = round(self.normal_price - self.sale_price, 2)
-        self.metacritic_score = args.pop('metacriticScore', None)
-        self.steam_reviews_percent = args.pop('steamRatingPercent', None)
-        self.steam_reviews_count = args.pop('steamRatingCount', None)
-        self.steam_app_id = args.pop('steamAppID', None)
-        self.thumbnail_url = args.pop('thumb', None)
+    """A class to represent a deal.
 
+    To create a Deal object, record from the API has to be passed in the constructor.
 
-stores_mapping = {
-    'steam': '1',
-    'gog': '7',
-    'all': '1,7'
-}
+    Attributes
+    ----------
+    title : str
+        title of the game on discount
+    store_id : str
+        ID of the store, that the game is available for purchase in, used by the API
+    sale_price : float
+        price of the game after discount
+    normal_price : float
+        normal price of the game
+    saved_percentage : int
+        how many percent is the price lowered
+    saved_amount : int
+        how much is the price lowered
+    metacritic_score : str
+        numeric score of the game on https://www.metacritic.com/
+    steam_reviews_percent : str
+        percentage of positive reviews on Steam
+    steam_reviews_count : str
+        amount of positive reviews on Steam
+    steam_app_id : str
+        ID of the game on Steam
+    thumbnail_url : str
+        url of the game thumbnail in .jpg format
+    """
+
+    def __init__(self, **attrs):
+        self.title: str = attrs.pop('title', None)
+        self.store_id: str = attrs.pop('storeID', None)
+        self.sale_price = float(attrs.pop('salePrice', 0))
+        self.normal_price = float(attrs.pop('normalPrice', 0))
+        self.saved_percentage = round(float(attrs.pop('savings', 0)))
+        self.metacritic_score: str = attrs.pop('metacriticScore', None)
+        self.steam_reviews_percent: str = attrs.pop('steamRatingPercent', None)
+        self.steam_reviews_count: str = attrs.pop('steamRatingCount', None)
+        self.steam_app_id: str = attrs.pop('steamAppID', None)
+        self.thumbnail_url: str = attrs.pop('thumb', None)
+
+    def saved_amount(self) -> float:
+        return round(self.normal_price - self.sale_price, 2)
 
 
 async def get_deals(store: str = 'all',
@@ -45,6 +70,29 @@ async def get_deals(store: str = 'all',
                     max_price: int = 60,
                     min_steam_rating: int = None,
                     aaa: bool = False) -> List[Deal]:
+    """Fetch deals from API basing on given parameters.
+
+    :param store: Store name passed as string. Available options: 'steam', 'gog', 'all'.
+    :param amount: Amount of deals returned in the list.
+    :param sort_by: Specifies sorting criteria in the API.
+    :param min_price: Minimum discount price of the deals.
+    :param max_price: Maximum discount price of the deals.
+    :param min_steam_rating: Minimum steam rating of the deals.
+    :param aaa: If True, returns only deals with retail price more than 29$.
+    :return: List of deals as a Deal class objects.
+    :raises ValueError: When store parameter passed inside the function is not one of the possible options.
+    :raises NoDealsFound: When no deals are found with given parameters.
+    """
+
+    stores_mapping = {
+        'steam': '1',
+        'gog': '7',
+        'all': '1,7'
+    }
+
+    if store not in stores_mapping.keys():
+        raise ValueError('store must be one of %r.' % stores_mapping.keys())
+
     url = f'{settings.API_BASE_URL}' \
           f'?storeID={stores_mapping[store]}' \
           f'&sortBy={sort_by}' \
@@ -83,7 +131,17 @@ async def get_deals(store: str = 'all',
     return deals_list
 
 
-async def get_random_deal(min_price: int = None) -> Deal:
+async def get_random_deal(min_price: int = None,
+                          retry_count: int = 5) -> Deal:
+    """Fetch random deal from API.
+
+    This returns only a deal that is available only in either Steam or GOG.
+
+    :param min_price: Minimum discount price of the deal.
+    :param retry_count: How many iterations to make in order to find the deal.
+    :return: List of deals as a Deal class objects.
+    :raises NoDealsFound: When no random deal is found.
+    """
     url = f'{settings.API_BASE_URL}' \
           f'?storeID=1,7' \
           f'&sortBy=Metacritic' \
@@ -95,7 +153,10 @@ async def get_random_deal(min_price: int = None) -> Deal:
 
     session = aiohttp.ClientSession()
 
-    while True:
+    for i in range(0, retry_count):
+        if i + 1 == retry_count:
+            await session.close()
+            raise NoDealsFound
         request = await session.get(url)
         response_list = await request.json()
         if len(response_list) == 0:
@@ -122,7 +183,7 @@ def get_embed_from_deal(deal: Deal) -> discord.Embed:
     embed = discord.Embed(title=deal.title,
                           description=f"*Sale price:* **{deal.sale_price}$**\n"
                                       f"*Normal price:* **{deal.normal_price}$**\n"
-                                      f"*You save*: **{deal.saved_amount}$ ({deal.saved_percentage}% off)**\n\n"
+                                      f"*You save*: **{deal.saved_amount()}$ ({deal.saved_percentage}% off)**\n\n"
                                       f"*Steam reviews:* **{deal.steam_reviews_count}** "
                                       f"*({deal.steam_reviews_percent}% positive)*\n"
                                       f"*Link:* {link}/",
