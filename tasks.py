@@ -25,8 +25,9 @@ async def initialize_channels(guild: discord.Guild) -> (discord.CategoryChannel,
     channels_list = []
 
     for channel_name in settings.CHANNELS:
-        if (channel := discord.utils.find(lambda c: c.name == channel_name
-                                                    and c.category_id == category.id, guild.channels)) is None:
+        channel = discord.utils.find(lambda c: c.name == channel_name
+                                     and c.category_id == category.id, guild.channels)
+        if not channel:
             channel = await guild.create_text_channel(name=channel_name, category=category)
         channels_list.append(channel)
 

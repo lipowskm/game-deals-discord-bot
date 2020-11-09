@@ -1,6 +1,7 @@
 from decouple import config
 
 API_BASE_URL = config('API_BASE_URL')
+DATABASE_URL = config('DATABASE_URL')
 BOT_TOKEN = config('BOT_TOKEN')
 PREFIX = config('PREFIX')
 
