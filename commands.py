@@ -1,6 +1,8 @@
 import asyncio
 
 import discord
+
+import crud
 import settings
 from discord.ext import commands
 
@@ -43,7 +45,7 @@ class Commands(commands.Cog):
             await ctx.send(f'```Could not find any deals to show```')
 
     @update.error
-    async def update_handler(self, ctx, error):
+    async def update_handler(self, ctx: commands.Context, error):
         """A local Error Handler for update command.
         """
 
@@ -71,7 +73,7 @@ class Commands(commands.Cog):
                        embed=get_embed_from_deal(deal))
 
     @random.error
-    async def random_handler(self, ctx, error):
+    async def random_handler(self, ctx: commands.Context, error):
         """A local Error Handler for random command.
         """
 
@@ -141,7 +143,7 @@ class Commands(commands.Cog):
                 active = False
 
     @flip.error
-    async def flip_handler(self, ctx, error):
+    async def flip_handler(self, ctx: commands.Context, error):
         """A local Error Handler for flip command.
         """
 
@@ -154,6 +156,60 @@ class Commands(commands.Cog):
                                    'Example:\n'
                                    f'{settings.PREFIX} flip 15\n'
                                    f'{settings.PREFIX} flip 5 10```')
+
+    @commands.group()
+    @commands.has_permissions(administrator=True)
+    async def auto(self, ctx: commands.Context):
+        if not ctx.invoked_subcommand:
+            await ctx.channel.send('```fix\n'
+                                   'Invalid subcommand\n'
+                                   'Possible subommands:\n\n'
+                                   f'{settings.PREFIX} auto enable\n'
+                                   f'{settings.PREFIX} auto disable\n'
+                                   f'{settings.PREFIX} auto time [hour]```')
+
+    @auto.command()
+    async def enable(self, ctx: commands.Context):
+        db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
+        if db_guild['auto']:
+            await ctx.send(content=f'```fix\nAutomatic updates are already enabled```')
+            return
+        await crud.guild.update(db_guild['id'], {'auto': True})
+        await ctx.send(content=f'```Automatic updates have been enabled```')
+
+    @auto.command()
+    async def disable(self, ctx: commands.Context):
+        db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
+        if not db_guild['auto']:
+            await ctx.send(content=f'```fix\nAutomatic updates are already disabled```')
+            return
+        await crud.guild.update(db_guild['id'], {'auto': False})
+        await ctx.send(content=f'```Automatic updates have been disabled```')
+
+    @auto.command()
+    async def time(self, ctx: commands.Context, hour: int = None):
+        if not hour:
+            db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
+            await ctx.send(content=f"```Automatic updates are scheduled for {db_guild['time']}:00 UTC```")
+            return
+        if not 0 <= hour < 24:
+            await ctx.send(content=f'```fix\nTime of auto update has to be a number between 0 and 23```')
+            return
+        db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
+        await crud.guild.update(db_guild['id'], {'time': hour})
+        await ctx.send(content=f'```Update time has been set to {hour}:00 UTC```')
+
+    @time.error
+    async def time_handler(self, ctx: commands.Context, error):
+        """A local Error Handler for time command.
+        """
+
+        if isinstance(error, discord.ext.commands.BadArgument):
+            await ctx.channel.send('```fix\n'
+                                   'Invalid argument\n'
+                                   'Argument must be an integer between 0 and 23\n\n'
+                                   'Example:\n'
+                                   f'{settings.PREFIX} auto time 12```')
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

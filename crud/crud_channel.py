@@ -71,8 +71,8 @@ class CRUDChannel(CRUDBase[Channel]):
             db_guild_id, db_category_id = await crud.category.create_with_relationship(category_in, guild_in)
             db_category = await crud.category.get(db_category_id)
         else:
-            db_guild_id = dict(db_category)['guild_id']
-            db_category_id = dict(db_category)['id']
+            db_guild_id = db_category['guild_id']
+            db_category_id = db_category['id']
         db_guild = await crud.guild.get(db_guild_id)
         channels_list = []
         for channel_in in channels_in:
@@ -81,8 +81,8 @@ class CRUDChannel(CRUDBase[Channel]):
                 'name': channel_in.name,
                 'category_id': db_category_id,
                 'guild_id': db_guild_id,
-                'category_discord_id': dict(db_category)['discord_id'],
-                'guild_discord_id': dict(db_guild)['discord_id'],
+                'category_discord_id': db_category['discord_id'],
+                'guild_discord_id': db_guild['discord_id'],
                 'min_retail_price': settings.CHANNELS_SETTINGS[channel_in.name]['min_retail_price'],
                 'max_retail_price': settings.CHANNELS_SETTINGS[channel_in.name]['max_retail_price'],
                 'store': settings.CHANNELS_SETTINGS[channel_in.name]['store'],
