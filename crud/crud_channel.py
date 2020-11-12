@@ -92,7 +92,7 @@ class CRUDChannel(CRUDBase[Channel]):
         await database.execute(query=query)
 
     async def update_by_name(self, name: str, obj_in: dict) -> int:
-        """Update object with given id.
+        """Update object with given name.
 
         :param name: name of updated Channel in database.
         :param obj_in: dict containing required attributes.
@@ -100,6 +100,18 @@ class CRUDChannel(CRUDBase[Channel]):
         """
         query = (
             self.model.__table__.update().where(name == self.model.name).values(**obj_in)
+        )
+        return await database.execute(query=query)
+
+    async def update_by_discord_id(self, discord_id: int, obj_in: dict) -> int:
+        """Update object with given id.
+
+        :param discord_id: ID of updated Channel in Discord.
+        :param obj_in: dict containing required attributes.
+        :return: id of updated object in database.
+        """
+        query = (
+            self.model.__table__.update().where(discord_id == self.model.discord_id).values(**obj_in)
         )
         return await database.execute(query=query)
 

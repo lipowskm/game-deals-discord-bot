@@ -53,11 +53,6 @@ async def on_ready():
 
     await bot.change_presence(status=discord.Status.online, activity=discord.Game(f"Listening on {settings.PREFIX}"))
     logging.info('Bot started')
-    try:
-        open('config.yaml', 'x')
-        logging.info('Created new config file')
-    except FileExistsError:
-        pass
 
 
 @bot.event

@@ -10,7 +10,6 @@ from discord.ext import commands, tasks
 import crud
 import settings
 from deal import get_deals, get_embed_from_deal, Deal
-from utils import update_guild_config
 
 guilds__running_tasks: dict = {}
 
@@ -91,13 +90,9 @@ class ScheduledTasks(commands.Cog):
             await channel.send(content=f"```That's it for today :(```")
         except discord.errors.NotFound:
             logging.error(f'Channel {channel.name} has been deleted while the bot was working on {channel.guild}')
-            category, channels = await initialize_channels(channel.guild)
-            config = update_guild_config(filename='config.yaml',
-                                         guild=channel.guild,
-                                         category=category,
-                                         channels=channels)
-            new_channel_id = config[channel.guild.id]['channels'][channel.name]
-            await self.send_deals_to_channel(deals_list, self.bot.get_channel(new_channel_id))
+            new_channel = await channel.guild.create_text_channel(name=channel.name, category=channel.category)
+            await crud.channel.update_by_discord_id(channel.id, {'discord_id': new_channel.id})
+            await self.send_deals_to_channel(deals_list, new_channel)
 
     async def send_deals_to_channels(self,
                                      deals_list: List[Deal],

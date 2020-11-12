@@ -49,29 +49,3 @@ def colour_picker(percentage: int) -> discord.Colour:
         return discord.Colour.blue()
     else:
         return discord.Colour.gold()
-
-
-def update_guild_config(filename: str,
-                        guild: discord.Guild,
-                        category: discord.CategoryChannel,
-                        channels: List[discord.TextChannel],
-                        auto: bool = None,
-                        time: int = None):
-    with open(filename, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-        guild_config = {
-            guild.id: {
-                'category': category.id,
-                'channels': {channel.name: channel.id for channel in channels},
-                'auto': auto if auto else config[guild.id]['auto'],
-                'time': time if time else config[guild.id]['time']
-            }
-        }
-        if config:
-            config.update(guild_config)
-        else:
-            config = guild_config
-    with open(filename, 'w') as f:
-        yaml.safe_dump(config, stream=f)
-        logging.info(f'Updated config.yaml for guild {guild.name}')
-    return config
