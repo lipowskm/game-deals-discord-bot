@@ -1,5 +1,3 @@
-import asyncio
-
 import crud
 from commands import Commands
 import settings
@@ -71,6 +69,17 @@ async def on_resumed():
     await bot.change_presence(status=discord.Status.online, activity=discord.Game(f"Listening on {settings.PREFIX}"))
     logging.info('Bot restarted')
 
+
+@bot.event
+async def on_guild_channel_update(before: discord.TextChannel, after: discord.TextChannel):
+    if not isinstance(before, discord.TextChannel):
+        return
+    db_channels = await crud.channel.get_all_by_guild_discord_id(before.guild.id)
+    for db_channel in db_channels:
+        db_channel = dict(db_channel)
+        if before.id == db_channel['discord_id'] and after.name != db_channel['name']:
+            await crud.channel.update(db_channel['id'], {'name': after.name})
+            break
 
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 bot.add_cog(ScheduledTasks(bot))

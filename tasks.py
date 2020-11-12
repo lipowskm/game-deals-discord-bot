@@ -91,7 +91,8 @@ class ScheduledTasks(commands.Cog):
         except discord.errors.NotFound:
             logging.error(f'Channel {channel.name} has been deleted while the bot was working on {channel.guild}')
             new_channel = await channel.guild.create_text_channel(name=channel.name, category=channel.category)
-            await crud.channel.update_by_discord_id(channel.id, {'discord_id': new_channel.id})
+            await crud.channel.update_by_discord_id(channel.id, {'discord_id': new_channel.id,
+                                                                 'name': channel.name})
             await self.send_deals_to_channel(deals_list, new_channel)
 
     async def send_deals_to_channels(self,
