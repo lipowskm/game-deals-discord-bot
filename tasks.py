@@ -1,11 +1,13 @@
 import asyncio
 import logging
+from asyncpg import Record
 from datetime import datetime
 from typing import List
 
 import discord
-import yaml
 from discord.ext import commands, tasks
+
+import crud
 import settings
 from deal import get_deals, get_embed_from_deal, Deal
 from utils import update_guild_config
@@ -24,7 +26,7 @@ async def initialize_channels(guild: discord.Guild) -> (discord.CategoryChannel,
 
     channels_list = []
 
-    for channel_name in settings.CHANNELS:
+    for channel_name in settings.CHANNELS_SETTINGS.keys():
         channel = discord.utils.find(lambda c: c.name == channel_name
                                      and c.category_id == category.id, guild.channels)
         if not channel:
@@ -44,13 +46,14 @@ class ScheduledTasks(commands.Cog):
         steam_deals_list = await get_deals(amount=settings.STEAM_DEALS_AMOUNT, store='steam')
         gog_deals_list = await get_deals(amount=settings.GOG_DEALS_AMOUNT, store='gog')
         coroutines = []
-        with open('config.yaml', 'r') as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-            for guild in self.bot.guilds:
-                if config[guild.id]['auto'] and config[guild.id]['time'] == datetime.now().hour:
-                    coroutines.append(self.deals_task(guild, steam_deals_list + gog_deals_list))
-        if coroutines:
-            await asyncio.gather(*coroutines)
+        db_guilds = await crud.guild.get_all_by_filters(time=datetime.now().hour, auto=True)
+        if not db_guilds:
+            return
+        for db_guild in db_guilds:
+            db_guild = dict(db_guild)
+            guild = self.bot.get_guild(db_guild['discord_id'])
+            coroutines.append(self.deals_task(guild, steam_deals_list + gog_deals_list))
+        await asyncio.gather(*coroutines)
 
     @deals_schedule.before_loop
     async def before_deals_schedule(self):
@@ -65,17 +68,9 @@ class ScheduledTasks(commands.Cog):
             guilds__running_tasks[guild.id] = [self.deals_task.__name__]
 
         try:
-            category = discord.utils.get(guild.categories, name=settings.CATEGORY)
-            steam_channel = discord.utils.get(guild.channels, name=settings.STEAM_CHANNEL, category=category)
-            steam_aaa_channel = discord.utils.get(guild.channels, name=settings.STEAM_AAA_CHANNEL, category=category)
-            gog_channel = discord.utils.get(guild.channels, name=settings.GOG_CHANNEL, category=category)
-            gog_aaa_channel = discord.utils.get(guild.channels, name=settings.GOG_AAA_CHANNEL, category=category)
-
+            db_channels = await crud.channel.get_all_by_guild_discord_id(guild.id)
             await self.send_deals_to_channels(deals_list,
-                                              steam_channel,
-                                              steam_aaa_channel,
-                                              gog_channel,
-                                              gog_aaa_channel)
+                                              db_channels)
 
         except discord.errors.Forbidden:
             logging.error(f'Insufficient permissions to send messages or bot has been removed from {guild}')
@@ -106,26 +101,13 @@ class ScheduledTasks(commands.Cog):
 
     async def send_deals_to_channels(self,
                                      deals_list: List[Deal],
-                                     steam_channel: discord.TextChannel,
-                                     steam_aaa_channel: discord.TextChannel,
-                                     gog_channel: discord.TextChannel,
-                                     gog_aaa_channel: discord.TextChannel):
-        steam_deals = []
-        steam_aaa_deals = []
-        gog_deals = []
-        gog_aaa_deals = []
-        for deal in deals_list:
-            if deal.store_id == '1' and deal.normal_price <= 29:
-                steam_deals.append(deal)
-            if deal.store_id == '1' and deal.normal_price > 29:
-                steam_aaa_deals.append(deal)
-            if deal.store_id == '7' and deal.normal_price <= 29:
-                gog_deals.append(deal)
-            if deal.store_id == '7' and deal.normal_price > 29:
-                gog_aaa_deals.append(deal)
-
-        coroutines = [self.send_deals_to_channel(steam_deals, steam_channel),
-                      self.send_deals_to_channel(steam_aaa_deals, steam_aaa_channel),
-                      self.send_deals_to_channel(gog_deals, gog_channel),
-                      self.send_deals_to_channel(gog_aaa_deals, gog_aaa_channel)]
+                                     db_channels: List[Record]):
+        coroutines = []
+        for db_channel in db_channels:
+            db_channel = dict(db_channel)
+            channel = self.bot.get_channel(db_channel['discord_id'])
+            filtered_deals = [deal for deal in deals_list
+                              if deal.store_id == settings.STORES_MAPPING[db_channel['store']]
+                              and db_channel['min_retail_price'] < deal.normal_price <= db_channel['max_retail_price']]
+            coroutines.append(self.send_deals_to_channel(filtered_deals, channel))
         await asyncio.gather(*coroutines)
