@@ -4,12 +4,40 @@ import discord
 from typing import Union
 
 import crud
+import settings
 from crud.base import CRUDBase
 from database.models import Channel
 from database.session import database
 
 
 class CRUDChannel(CRUDBase[Channel]):
+    async def get_all_by_guild_id(self, guild_id: int) -> int:
+        """Get all channels by id of the Guild in database.
+
+        :param guild_id: id of Guild in database.
+        :return: List of Records objects containing data.
+        """
+        query = self.model.__table__.select().where(self.model.guild_id == guild_id)
+        return await database.fetch_all(query=query)
+
+    async def get_all_by_guild_discord_id(self, guild_discord_id: int) -> int:
+        """Get all channels by id of the Guild in Discord.
+
+        :param guild_discord_id: id of Guild in Discord.
+        :return: List of Records objects containing data.
+        """
+        query = self.model.__table__.select().where(self.model.guild_discord_id == guild_discord_id)
+        return await database.fetch_all(query=query)
+
+    async def get_all_by_category_id(self, category_id: int) -> int:
+        """Get all channels by id of the Category in database.
+
+        :param category_id: id of Category in database.
+        :return: List of Records objects containing data.
+        """
+        query = self.model.__table__.select().where(self.model.category_id == category_id)
+        return await database.fetch_all(query=query)
+
     async def create(self, obj_in: discord.TextChannel) -> int:
         """Create record in database from discord.TextChannel class object.
 
@@ -36,23 +64,44 @@ class CRUDChannel(CRUDBase[Channel]):
         :return: None.
         """
         if type(category_in) == discord.CategoryChannel:
-            category = await crud.category.get_by_name(category_in.name)
+            db_category = await crud.category.get_by_name(category_in.name)
         else:
-            category = await crud.category.get(category_in)
-        if not category:
-            db_category_id = await crud.category.create_with_relationship(category_in, guild_in)
+            db_category = await crud.category.get(category_in)
+        if not db_category:
+            db_guild_id, db_category_id = await crud.category.create_with_relationship(category_in, guild_in)
+            db_category = await crud.category.get(db_category_id)
         else:
-            db_category_id = dict(category)['id']
+            db_guild_id = dict(db_category)['guild_id']
+            db_category_id = dict(db_category)['id']
+        db_guild = await crud.guild.get(db_guild_id)
         channels_list = []
         for channel_in in channels_in:
             channel_dict = {
                 'discord_id': channel_in.id,
                 'name': channel_in.name,
-                'category_id': db_category_id
+                'category_id': db_category_id,
+                'guild_id': db_guild_id,
+                'category_discord_id': dict(db_category)['discord_id'],
+                'guild_discord_id': dict(db_guild)['discord_id'],
+                'min_retail_price': settings.CHANNELS_SETTINGS[channel_in.name]['min_retail_price'],
+                'max_retail_price': settings.CHANNELS_SETTINGS[channel_in.name]['max_retail_price'],
+                'store': settings.CHANNELS_SETTINGS[channel_in.name]['store'],
             }
             channels_list.append(channel_dict)
         query = self.model.__table__.insert().values(channels_list)
         await database.execute(query=query)
+
+    async def update_by_name(self, name: str, obj_in: dict) -> int:
+        """Update object with given id.
+
+        :param name: name of updated Channel in database.
+        :param obj_in: dict containing required attributes.
+        :return: id of updated object in database.
+        """
+        query = (
+            self.model.__table__.update().where(name == self.model.name).values(**obj_in)
+        )
+        return await database.execute(query=query)
 
 
 channel = CRUDChannel(Channel)

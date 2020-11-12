@@ -66,9 +66,8 @@ class CRUDBase(Generic[ModelType]):
         :param obj_in: dict containing required attributes.
         :return: id of updated object in database.
         """
-        db_obj = self.model(**obj_in)
         query = (
-            self.model.__table__.update().where(id == self.model.id).values(**db_obj)
+            self.model.__table__.update().where(id == self.model.id).values(**obj_in)
         )
         return await database.execute(query=query)
 
