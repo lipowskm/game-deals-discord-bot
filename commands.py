@@ -174,7 +174,6 @@ class Commands(commands.Cog):
                   brief=strings.COMMAND_ENABLE_BRIEF,
                   description=strings.COMMAND_ENABLE_DESC)
     async def enable(self, ctx: commands.Context):
-        # TODO: Add brief and description
         db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
         if db_guild['auto']:
             await ctx.send(content=f'```fix\nAutomatic updates are already enabled```')
@@ -186,7 +185,6 @@ class Commands(commands.Cog):
                   brief=strings.COMMAND_DISABLE_BRIEF,
                   description=strings.COMMAND_DISABLE_DESC)
     async def disable(self, ctx: commands.Context):
-        # TODO: Add brief and description
         db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
         if not db_guild['auto']:
             await ctx.send(content=f'```fix\nAutomatic updates are already disabled```')
@@ -198,7 +196,6 @@ class Commands(commands.Cog):
                   brief=strings.COMMAND_TIME_BRIEF,
                   description=strings.COMMAND_TIME_DESC)
     async def time(self, ctx: commands.Context, hour: int = None):
-        # TODO: Add brief and description
         if not hour:
             db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
             await ctx.send(content=f"```Automatic updates are scheduled for {db_guild['time']}:00 UTC```")
