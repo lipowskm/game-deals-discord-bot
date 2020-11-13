@@ -83,18 +83,11 @@ async def get_deals(store: str = 'all',
     :raises ValueError: When store parameter passed inside the function is not one of the possible options.
     :raises NoDealsFound: When no deals are found with given parameters.
     """
-
-    stores_mapping = {
-        'steam': '1',
-        'gog': '7',
-        'all': '1,7'
-    }
-
-    if store not in stores_mapping.keys():
-        raise ValueError('store must be one of %r.' % stores_mapping.keys())
+    if store not in settings.STORES_MAPPING.keys():
+        raise ValueError('store must be one of %r.' % settings.STORES_MAPPING.keys())
 
     url = f'{settings.API_BASE_URL}' \
-          f'?storeID={stores_mapping[store]}' \
+          f'?storeID={settings.STORES_MAPPING[store]}' \
           f'&sortBy={sort_by}' \
           f'&upperPrice={max_price}' \
           f'&onSale=1' \
@@ -112,8 +105,8 @@ async def get_deals(store: str = 'all',
     deals_list: List[Deal] = []
 
     for e in range(0, pages):
-        request = await session.get(url)
-        response_list = await request.json()
+        response = await session.get(url)
+        response_list = await response.json()
         if len(response_list) == 0:
             if e == 0:
                 await session.close()
@@ -151,25 +144,22 @@ async def get_random_deal(min_price: int = None,
     if min_price:
         url += f'&lowerPrice={min_price}'
 
-    session = aiohttp.ClientSession()
-
-    for i in range(0, retry_count):
-        if i + 1 == retry_count:
-            await session.close()
-            raise NoDealsFound
-        request = await session.get(url)
-        response_list = await request.json()
-        if len(response_list) == 0:
-            continue
-        record = response_list[0]
-        deal = Deal(**record)
-        await session.close()
-        return deal
+    async with aiohttp.ClientSession() as session:
+        for i in range(0, retry_count):
+            if i + 1 == retry_count:
+                raise NoDealsFound
+            async with session.get(url) as response:
+                response_list = await response.json()
+                if len(response_list) == 0:
+                    continue
+                record = response_list[0]
+                deal = Deal(**record)
+                return deal
 
 
 def get_embed_from_deal(deal: Deal) -> discord.Embed:
     if deal.store_id == '1':
-        link = f'https://store.steampowered.com/app/{deal.steam_app_id}'
+        deal_url = f'https://store.steampowered.com/app/{deal.steam_app_id}'
     else:
         replace_dict = {
             ' - ': ' ',
@@ -179,14 +169,14 @@ def get_embed_from_deal(deal: Deal) -> discord.Embed:
             ' ': '_'
         }
         formatted_title = replace_all(deal.title, replace_dict).lower()
-        link = f'https://www.gog.com/game/{formatted_title}'
+        deal_url = f'https://www.gog.com/game/{formatted_title}'
     embed = discord.Embed(title=deal.title,
                           description=f"*Sale price:* **{deal.sale_price}$**\n"
                                       f"*Normal price:* **{deal.normal_price}$**\n"
                                       f"*You save*: **{deal.saved_amount()}$ ({deal.saved_percentage}% off)**\n\n"
                                       f"*Steam reviews:* **{deal.steam_reviews_count}** "
                                       f"*({deal.steam_reviews_percent}% positive)*\n"
-                                      f"*Link:* {link}/",
+                                      f"*Link:* {deal_url}/",
                           colour=colour_picker(deal.saved_percentage))
     embed.set_image(url=deal.thumbnail_url)
     return embed

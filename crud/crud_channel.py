@@ -64,7 +64,7 @@ class CRUDChannel(CRUDBase[Channel]):
         :return: None.
         """
         if type(category_in) == discord.CategoryChannel:
-            db_category = await crud.category.get_by_name(category_in.name)
+            db_category = await crud.category.get_by_discord_id(category_in.id)
         else:
             db_category = await crud.category.get(category_in)
         if not db_category:

@@ -6,7 +6,7 @@ import yaml
 
 
 def replace_all(text: str, replace_dict: dict) -> str:
-    """Helper function to replace multiple character in a string.
+    """Helper function to replace multiple characters in a string.
 
     :param text: String to be formatted.
     :param replace_dict: Dictionary containing characters to replace. Keys are characters to be replaced,

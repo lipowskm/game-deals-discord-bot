@@ -9,7 +9,7 @@ from database.session import database
 
 
 class CRUDGuild(CRUDBase[Guild]):
-    async def get_all_by_filters(self,
+    async def get_all_by_filters(self, *,
                                  time: int,
                                  auto: bool) -> List[Record]:
         """Return all Guilds which match given filters.
@@ -34,6 +34,27 @@ class CRUDGuild(CRUDBase[Guild]):
             'time': 12
         }
         query = self.model.__table__.insert().values(**guild_dict)
+        return await database.execute(query=query)
+
+    async def update_by_discord_id(self, discord_id: int, obj_in: dict) -> int:
+        """Update object with given id.
+
+        :param discord_id: id of updated Guild in discord.
+        :param obj_in: dict containing required attributes.
+        :return: id of updated object in database.
+        """
+        query = (
+            self.model.__table__.update().where(discord_id == self.model.discord_id).values(**obj_in)
+        )
+        return await database.execute(query=query)
+
+    async def remove_by_discord_id(self, discord_id: int) -> int:
+        """Remove Guild with given discord ID.
+
+        :param discord_id: ID of Guild in Discord.
+        :return: id of object in database.
+        """
+        query = self.model.__table__.delete().where(discord_id == self.model.discord_id)
         return await database.execute(query=query)
 
 

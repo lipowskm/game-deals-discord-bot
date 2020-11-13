@@ -83,7 +83,6 @@ class CRUDBase(Generic[ModelType]):
     async def remove_all(self) -> int:
         """Remove all rows from table.
 
-        :param id: id of object in database.
         :return: id of object in database.
         """
         query = self.model.__table__.delete()
