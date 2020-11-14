@@ -18,7 +18,8 @@ bot = commands.Bot(command_prefix=settings.PREFIX + ' ')
 async def on_guild_join(guild: discord.Guild):
     logging.info(f'Joined guild {guild.name}')
     category, channels = await initialize_channels(guild)
-    await crud.channel.bulk_create(channels, category, guild)
+    if not await crud.guild.get_by_discord_id(guild.id):
+        await crud.channel.bulk_create(channels, category, guild)
 
     steam_deals_list = await get_deals(amount=settings.STEAM_DEALS_AMOUNT, store='steam')
     gog_deals_list = await get_deals(amount=settings.GOG_DEALS_AMOUNT, store='gog')
@@ -45,7 +46,6 @@ async def on_command_error(ctx: commands.Context, error):
 
 @bot.event
 async def on_ready():
-    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
     await bot.change_presence(status=discord.Status.online, activity=discord.Game(f"Listening on {settings.PREFIX}"))
