@@ -1,8 +1,34 @@
-import logging
+import settings
 from typing import List
 
 import discord
-import yaml
+
+
+async def initialize_channels(guild: discord.Guild) -> (discord.CategoryChannel, List[discord.TextChannel]):
+    """Function that checks whether all channels and category required by the bot are present in the Guild,
+    and if not, creates them.
+
+    :param guild: discord.py Guild class object.
+    :return: tuple of discord.py Category class object and list of Channel class objects.
+    """
+    if not discord.utils.find(lambda c: c.name == settings.CATEGORY, guild.categories):
+        category = await guild.create_category(name=settings.CATEGORY)
+    else:
+        category = discord.utils.get(guild.categories, name=settings.CATEGORY)
+    for role in guild.roles:
+        await category.set_permissions(role, send_messages=False)
+    await category.set_permissions(guild.me, send_messages=True)
+
+    channels_list = []
+
+    for channel_name in settings.CHANNELS_SETTINGS.keys():
+        channel = discord.utils.find(lambda c: c.name == channel_name
+                                     and c.category_id == category.id, guild.channels)
+        if not channel:
+            channel = await guild.create_text_channel(name=channel_name, category=category)
+        channels_list.append(channel)
+
+    return category, channels_list
 
 
 def replace_all(text: str, replace_dict: dict) -> str:

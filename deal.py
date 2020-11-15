@@ -158,6 +158,11 @@ async def get_random_deal(min_price: int = None,
 
 
 def get_embed_from_deal(deal: Deal) -> discord.Embed:
+    """Function that takes a Deal class object as input parameter and converts it into discord.py Embed object.
+
+    :param deal: Deal dataclass object.
+    :return: discord.py Embed class object.
+    """
     if deal.store_id == '1':
         deal_url = f'https://store.steampowered.com/app/{deal.steam_app_id}'
     else:

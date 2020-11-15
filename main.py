@@ -5,8 +5,9 @@ import database.base
 from database.base import Base
 from database.session import database, engine
 from deal import get_deals
-from tasks import initialize_channels, ScheduledTasks
+from tasks import ScheduledTasks
 import logging
+from utils import initialize_channels
 
 import discord
 from discord.ext import commands

@@ -14,34 +14,19 @@ from deal import get_deals, get_embed_from_deal, Deal
 guilds__running_tasks: dict = {}
 
 
-async def initialize_channels(guild: discord.Guild) -> (discord.CategoryChannel, List[discord.TextChannel]):
-    if not discord.utils.find(lambda c: c.name == settings.CATEGORY, guild.categories):
-        category = await guild.create_category(name=settings.CATEGORY)
-    else:
-        category = discord.utils.get(guild.categories, name=settings.CATEGORY)
-    for role in guild.roles:
-        await category.set_permissions(role, send_messages=False)
-    await category.set_permissions(guild.me, send_messages=True)
-
-    channels_list = []
-
-    for channel_name in settings.CHANNELS_SETTINGS.keys():
-        channel = discord.utils.find(lambda c: c.name == channel_name
-                                     and c.category_id == category.id, guild.channels)
-        if not channel:
-            channel = await guild.create_text_channel(name=channel_name, category=category)
-        channels_list.append(channel)
-
-    return category, channels_list
-
-
 class ScheduledTasks(commands.Cog):
+    """Cog designed for tasks that are handled by the bot automatically.
+    """
     def __init__(self, bot):
         self.bot: commands.Bot = bot
         self.deals_schedule.start()
 
     @tasks.loop(minutes=60)
     async def deals_schedule(self):
+        """Every hour sends deals to every guild asynchronously which has this hour set up as a delivery hour.
+
+        :return: None
+        """
         steam_deals_list = await get_deals(amount=settings.STEAM_DEALS_AMOUNT, store='steam')
         gog_deals_list = await get_deals(amount=settings.GOG_DEALS_AMOUNT, store='gog')
         coroutines = []
@@ -61,6 +46,13 @@ class ScheduledTasks(commands.Cog):
     async def deals_task(self,
                          guild: discord.Guild,
                          deals_list: List[Deal]):
+        """Creates new task object and tries to send deals to every channel that is assigned to the Guild in database.
+        After it's done, removes task object for the Guild.
+
+        :param guild: discord.py Guild class object to send deals to.
+        :param deals_list: List of Deal dataclass objects.
+        :return: None
+        """
         if guild.id in guilds__running_tasks.keys():
             guilds__running_tasks[guild.id].append(self.deals_task.__name__)
         else:
@@ -78,13 +70,19 @@ class ScheduledTasks(commands.Cog):
     async def send_deals_to_channel(self,
                                     deals_list: List[Deal],
                                     channel: discord.TextChannel):
+        """Method that sends deals to the channel specified.
+
+        :param deals_list: List of Deal dataclass objects.
+        :param channel: discord.py Channel class object.
+        :return: None
+        """
         if len(deals_list) == 0:
             return
         try:
             await channel.purge()
             await asyncio.sleep(1)  # This is due to the Discord sometimes not clearing the channel.
+            await channel.send(content=f"**Here's a list of {len(deals_list)} new :video_game: deals!**")
             await channel.send(content=f"```Last updated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}```")
-            await channel.send(content=f"```Here's a list of {len(deals_list)} new deals!```")
             for deal in deals_list:
                 await channel.send(embed=get_embed_from_deal(deal))
             await channel.send(content=f"```That's it for today :(```")
@@ -98,6 +96,14 @@ class ScheduledTasks(commands.Cog):
     async def send_deals_to_channels(self,
                                      deals_list: List[Deal],
                                      db_channels: List[Record]):
+        """Method that takes list of channels from database, filters the deals basing on fields
+        (minimum and maximum retail price) in database for each channel, and sends the filtered deals to all channels
+        asynchronously.
+
+        :param deals_list: List od Deal dataclass objects.
+        :param db_channels: List of channels gathered from database.
+        :return: None
+        """
         coroutines = []
         for db_channel in db_channels:
             db_channel = dict(db_channel)
