@@ -8,7 +8,7 @@ This is yet another bot for Discord that tracks deals for games. Unlike the othe
 
 The main priority in creating this bot was to minimize effort the user has to make, so for the most part the bot handles things by itself, but it doesn't mean, that there aren't any commands available!
 
-It has it's own schedule, so everyday at the same hour (between 12:00 UTC and 13:00 UTC) it cleans the channels and posts new deals there. That way anyone who enters the channel will only see deals that are still available for purchase. The time can be changed by server administrator.
+It has it's own schedule, so everyday at the same hour (around 12:00 UTC) it cleans the channels and posts new deals there. That way anyone who enters the channel will only see deals that are still available for purchase. The time can be changed by server administrator.
 
 <p align="center">
   <img src=https://i.imgur.com/c7xNGn8.gif width="480" height="480">
@@ -51,7 +51,17 @@ It is **highly recommended** to mute the category which the channels are assigne
 
 ## Examples
 
+### Update command
+`!gd update`: Updates all channels with 60 deals (distributed across all channels).
+
+`!gd update steam 100`: Updates only Steam channels with 100 deals (distributed across both Steam channels).
+
+`!gd update gog 100`: Updates only GOG channels with 100 deals (distributed across both GOG channels).
+
+
 ### Flip command
+`!gd flip`: Creates a flip book with deals.
+
 `!gd flip 10`: Creates a flip book with deals, that minimal sale price is 10 USD.
 
 `!gd flip 5 20`: Creates a flip book with deals, that minimal sale price is 5 USD and maximum sale price is 20 USD.
@@ -59,6 +69,8 @@ It is **highly recommended** to mute the category which the channels are assigne
 <img src=https://i.imgur.com/ZuYLZEl.gif width="480" height="326">
 
 ### Random command
+`!gd random`: Posts a random deal.
+
 `!gd random 10`: Posts a random deal, which minimal sale price is 10 USD.
 
 <img src=https://i.imgur.com/mivYnRt.gif width="480" height="326">
