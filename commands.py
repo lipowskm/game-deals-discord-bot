@@ -1,6 +1,8 @@
 import asyncio
 
 import discord
+
+import crud
 import settings
 from discord.ext import commands
 
@@ -10,6 +12,9 @@ from tasks import guilds__running_tasks, ScheduledTasks
 
 
 class Commands(commands.Cog):
+    """Cog designed for user commands.
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
         self.scheduled_tasks_cog: ScheduledTasks = self.bot.get_cog('ScheduledTasks')
@@ -19,6 +24,13 @@ class Commands(commands.Cog):
                       description=strings.COMMAND_UPDATE_DESC)
     @commands.has_permissions(administrator=True)
     async def update(self, ctx: commands.Context, store: str = 'all', deals_amount: int = 60):
+        """Handler of the update command, which updates deals in the Guild depending on given parameters.
+
+        :param ctx: discord.py Context.
+        :param store: Optional. Can be either 'steam', 'gog' or 'all'.
+        :param deals_amount: Optional. Amount of deals fetched from the API. Maximum is 200.
+        :return: None
+        """
         try:
             deals_amount = int(store)
             store = 'all'
@@ -43,7 +55,7 @@ class Commands(commands.Cog):
             await ctx.send(f'```Could not find any deals to show```')
 
     @update.error
-    async def update_handler(self, ctx, error):
+    async def update_handler(self, ctx: commands.Context, error):
         """A local Error Handler for update command.
         """
 
@@ -62,6 +74,12 @@ class Commands(commands.Cog):
                       brief=strings.COMMAND_RANDOM_BRIEF,
                       description=strings.COMMAND_RANDOM_DESC)
     async def random(self, ctx: commands.Context, min_price: int = 0):
+        """Handler of the random command, which posts a random deal in the channel which the command was invoked in.
+
+        :param ctx: discord.py Context.
+        :param min_price: Optional. Minimum discount price of a Deal.
+        :return: None
+        """
         try:
             deal = await get_random_deal(min_price)
         except NoDealsFound:
@@ -71,7 +89,7 @@ class Commands(commands.Cog):
                        embed=get_embed_from_deal(deal))
 
     @random.error
-    async def random_handler(self, ctx, error):
+    async def random_handler(self, ctx: commands.Context, error):
         """A local Error Handler for random command.
         """
 
@@ -88,6 +106,13 @@ class Commands(commands.Cog):
                       brief=strings.COMMAND_FLIP_BRIEF,
                       description=strings.COMMAND_FLIP_DESC)
     async def flip(self, ctx: commands.Context, min_price: int = 0, max_price: int = 60):
+        """Handler of the flip command, which posts a flipbook of deals in the channel which the command was invoked in.
+
+        :param ctx: discord.py Context.
+        :param min_price: Optional. Minimum discount price of a Deal.
+        :param min_price: Optional. Maximum discount price of a Deal.
+        :return: None
+        """
         try:
             deals_list = await get_deals(min_price=min_price, max_price=max_price, amount=60)
         except NoDealsFound:
@@ -141,7 +166,7 @@ class Commands(commands.Cog):
                 active = False
 
     @flip.error
-    async def flip_handler(self, ctx, error):
+    async def flip_handler(self, ctx: commands.Context, error):
         """A local Error Handler for flip command.
         """
 
@@ -154,6 +179,84 @@ class Commands(commands.Cog):
                                    'Example:\n'
                                    f'{settings.PREFIX} flip 15\n'
                                    f'{settings.PREFIX} flip 5 10```')
+
+    @commands.group(name='auto',
+                    brief=strings.COMMAND_AUTO_BRIEF,
+                    description=strings.COMMAND_AUTO_DESC)
+    @commands.has_permissions(administrator=True)
+    async def auto(self, ctx: commands.Context):
+        if not ctx.invoked_subcommand:
+            await ctx.channel.send('```fix\n'
+                                   'Invalid subcommand\n'
+                                   'Possible subommands:\n\n'
+                                   f'{settings.PREFIX} auto enable\n'
+                                   f'{settings.PREFIX} auto disable\n'
+                                   f'{settings.PREFIX} auto time [hour]```')
+
+    @auto.command(name='enable',
+                  brief=strings.COMMAND_ENABLE_BRIEF,
+                  description=strings.COMMAND_ENABLE_DESC)
+    async def enable(self, ctx: commands.Context):
+        """Handler of the enable command, which enables automatic daily deals updates in the Guild.
+
+        :param ctx: discord.py Context.
+        :return: None
+        """
+        db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
+        if db_guild['auto']:
+            await ctx.send(content=f'```fix\nAutomatic updates are already enabled```')
+            return
+        await crud.guild.update(db_guild['id'], {'auto': True})
+        await ctx.send(content=f'```Automatic updates have been enabled```')
+
+    @auto.command(name='disable',
+                  brief=strings.COMMAND_DISABLE_BRIEF,
+                  description=strings.COMMAND_DISABLE_DESC)
+    async def disable(self, ctx: commands.Context):
+        """Handler of the disables command, which disables automatic daily deals updates in the Guild.
+
+        :param ctx: discord.py Context.
+        :return: None
+        """
+        db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
+        if not db_guild['auto']:
+            await ctx.send(content=f'```fix\nAutomatic updates are already disabled```')
+            return
+        await crud.guild.update(db_guild['id'], {'auto': False})
+        await ctx.send(content=f'```Automatic updates have been disabled```')
+
+    @auto.command(name='time',
+                  brief=strings.COMMAND_TIME_BRIEF,
+                  description=strings.COMMAND_TIME_DESC)
+    async def time(self, ctx: commands.Context, hour: int = None):
+        """Handler of the time command, which sets the hour of daily deals update in the Guild.
+        If no hour is provided, informs the user about current update time.
+
+        :param ctx: discord.py Context.
+        :param hour: hour of the daily deals update. Can be integer from 0 to 23.
+        :return: None
+        """
+        if not hour:
+            db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
+            await ctx.send(content=f"```Automatic updates are scheduled for {db_guild['time']}:00 UTC```")
+            return
+        if not 0 <= hour < 24:
+            await ctx.send(content=f'```fix\nTime of auto update has to be a number between 0 and 23```')
+            return
+        await crud.guild.update_by_discord_id(ctx.guild.id, {'time': hour})
+        await ctx.send(content=f'```Update time has been set to {hour}:00 UTC```')
+
+    @time.error
+    async def time_handler(self, ctx: commands.Context, error):
+        """A local Error Handler for time command.
+        """
+
+        if isinstance(error, discord.ext.commands.BadArgument):
+            await ctx.channel.send('```fix\n'
+                                   'Invalid argument\n'
+                                   'Argument must be an integer between 0 and 23\n\n'
+                                   'Example:\n'
+                                   f'{settings.PREFIX} auto time 12```')
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
