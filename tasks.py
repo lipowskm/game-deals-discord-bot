@@ -82,7 +82,7 @@ class ScheduledTasks(commands.Cog):
             await channel.purge()
             await asyncio.sleep(1)  # This is due to the Discord sometimes not clearing the channel.
             await channel.send(content=f"**Here's a list of {len(deals_list)} new :video_game: deals!**")
-            await channel.send(content=f"```Last updated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}```")
+            await channel.send(content=f"```Last updated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')} UTC```")
             for deal in deals_list:
                 await channel.send(embed=get_embed_from_deal(deal))
             await channel.send(content=f"```That's it for today :(```")
