@@ -24,13 +24,6 @@ class Commands(commands.Cog):
                       description=strings.COMMAND_UPDATE_DESC)
     @commands.has_permissions(administrator=True)
     async def update(self, ctx: commands.Context, store: str = 'all', deals_amount: int = 60):
-        """Handler of the update command, which updates deals in the Guild depending on given parameters.
-
-        :param ctx: discord.py Context.
-        :param store: Optional. Can be either 'steam', 'gog' or 'all'.
-        :param deals_amount: Optional. Amount of deals fetched from the API. Maximum is 200.
-        :return: None
-        """
         try:
             deals_amount = int(store)
             store = 'all'
@@ -74,12 +67,6 @@ class Commands(commands.Cog):
                       brief=strings.COMMAND_RANDOM_BRIEF,
                       description=strings.COMMAND_RANDOM_DESC)
     async def random(self, ctx: commands.Context, min_price: int = 0):
-        """Handler of the random command, which posts a random deal in the channel which the command was invoked in.
-
-        :param ctx: discord.py Context.
-        :param min_price: Optional. Minimum discount price of a Deal.
-        :return: None
-        """
         try:
             deal = await get_random_deal(min_price)
         except NoDealsFound:
@@ -106,13 +93,6 @@ class Commands(commands.Cog):
                       brief=strings.COMMAND_FLIP_BRIEF,
                       description=strings.COMMAND_FLIP_DESC)
     async def flip(self, ctx: commands.Context, min_price: int = 0, max_price: int = 60):
-        """Handler of the flip command, which posts a flipbook of deals in the channel which the command was invoked in.
-
-        :param ctx: discord.py Context.
-        :param min_price: Optional. Minimum discount price of a Deal.
-        :param min_price: Optional. Maximum discount price of a Deal.
-        :return: None
-        """
         try:
             deals_list = await get_deals(min_price=min_price, max_price=max_price, amount=60)
         except NoDealsFound:
@@ -197,11 +177,6 @@ class Commands(commands.Cog):
                   brief=strings.COMMAND_ENABLE_BRIEF,
                   description=strings.COMMAND_ENABLE_DESC)
     async def enable(self, ctx: commands.Context):
-        """Handler of the enable command, which enables automatic daily deals updates in the Guild.
-
-        :param ctx: discord.py Context.
-        :return: None
-        """
         db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
         if db_guild['auto']:
             await ctx.send(content=f'```fix\nAutomatic updates are already enabled```')
@@ -213,11 +188,6 @@ class Commands(commands.Cog):
                   brief=strings.COMMAND_DISABLE_BRIEF,
                   description=strings.COMMAND_DISABLE_DESC)
     async def disable(self, ctx: commands.Context):
-        """Handler of the disables command, which disables automatic daily deals updates in the Guild.
-
-        :param ctx: discord.py Context.
-        :return: None
-        """
         db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
         if not db_guild['auto']:
             await ctx.send(content=f'```fix\nAutomatic updates are already disabled```')
@@ -229,13 +199,6 @@ class Commands(commands.Cog):
                   brief=strings.COMMAND_TIME_BRIEF,
                   description=strings.COMMAND_TIME_DESC)
     async def time(self, ctx: commands.Context, hour: int = None):
-        """Handler of the time command, which sets the hour of daily deals update in the Guild.
-        If no hour is provided, informs the user about current update time.
-
-        :param ctx: discord.py Context.
-        :param hour: hour of the daily deals update. Can be integer from 0 to 23.
-        :return: None
-        """
         if not hour:
             db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
             await ctx.send(content=f"```Automatic updates are scheduled for {db_guild['time']}:00 UTC```")
