@@ -40,7 +40,7 @@ It is **highly recommended** to mute the category which the channels are assigne
 
 ### Channels
 
-<img src=https://i.imgur.com/JgJYr1J.png width="231" height="169">
+<img src=https://i.imgur.com/hZvoaXT.png width="231" height="169">
 
 Bot automatically creates four channels that are the main point of deals distribution. Each channel has different deals inside, depending on two criterias - store and retail price:
 
