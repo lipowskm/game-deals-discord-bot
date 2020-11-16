@@ -52,6 +52,8 @@ Bot automatically creates four channels that are the main point of deals distrib
 
 `gog-aaa-deals`: Channel for GOG deals with retail price greater than or equal 29 USD.
 
+Each time the bot is automatically updating deals, it sends **100** deals for Steam, and **100** deals for GOG, for a total of **200** deals every day.
+
 As mentioned before, you are free to rename the channels, but keep in mind that the bot is using the id's for reference, so you cannot modify sorting mechanics that are used in each of them.
 
 ### Available commands
