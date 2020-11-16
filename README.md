@@ -21,6 +21,7 @@ Because Discord is somewhat of a limited frontend, the bot is also limited in am
 * [PostgreSQL](https://www.postgresql.org)
 * [discord.py](https://pypi.org/project/discord.py)
 * [SQLAlchemy](https://www.sqlalchemy.org)
+* [asyncio](https://docs.python.org/3/library/asyncio.html)
 * [aiohttp](https://pypi.org/project/aiohttp)
 * [databases](https://pypi.org/project/databases)
 * [CheapShark API](https://apidocs.cheapshark.com)
@@ -36,6 +37,22 @@ You are free to rename the channels as you wish, and if you happen to delete one
 It is **highly recommended** to mute the category which the channels are assigned to, since the bot is spamming them a lot.
 
 **IMPORTANT NOTE:** All the prices used within the commands are in **USD**.
+
+### Channels
+
+<img src=https://i.imgur.com/JgJYr1J.png width="231" height="169">
+
+Bot automatically creates four channels that are the main point of deals distribution. Each channel has different deals inside, depending on two criterias - store and retail price:
+
+`steam-deals`: Channel for Steam deals with retail price less than 29 USD.
+
+`steam-aaa-deals`: Channel for Steam deals with retail price higher than or equal 29 USD.
+
+`gog-deals`: Channel for GOG deals with retail price less than 29 USD.
+
+`gog-aaa-deals`: Channel for GOG deals with retail price greater than or equal 29 USD.
+
+As mentioned before, you are free to rename the channels, but keep in mind that the bot is using the id's for reference, so you cannot modify sorting mechanics that are used in each of them.
 
 ### Available commands
 
