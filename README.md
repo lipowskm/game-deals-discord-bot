@@ -1,6 +1,6 @@
 # Game Deals Discord Bot
 
-[![BotLink](https://img.shields.io/badge/Discord-Invite%20bot%20to%20your%20server-blue?style=plastic&logo=discord)](https://discord.com/api/oauth2/authorize?client_id=773196224975077437&permissions=268445728&scope=bot)
+[![BotLink](https://img.shields.io/badge/Discord-Invite%20bot%20to%20your%20server-blue?style=plastic&logo=discord)](https://discord.com/api/oauth2/authorize?client_id=773196224975077437&permissions=268445712&scope=bot)
 
 ## Description
 
