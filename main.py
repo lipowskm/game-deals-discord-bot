@@ -18,14 +18,19 @@ bot = commands.Bot(command_prefix=settings.PREFIX + ' ')
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     logging.info(f'Joined guild {guild.name}')
-    category, channels = await initialize_channels(guild)
-    if not await crud.guild.get_by_discord_id(guild.id):
-        await crud.channel.bulk_create(channels, category, guild)
+    try:
+        category, channels = await initialize_channels(guild)
+        if not await crud.guild.get_by_discord_id(guild.id):
+            await crud.channel.bulk_create(channels, category, guild)
 
-    steam_deals_list = await get_deals(amount=settings.STEAM_DEALS_AMOUNT, store='steam')
-    gog_deals_list = await get_deals(amount=settings.GOG_DEALS_AMOUNT, store='gog')
-    scheduled_tasks_cog: ScheduledTasks = bot.get_cog("ScheduledTasks")
-    await scheduled_tasks_cog.deals_task(guild, steam_deals_list + gog_deals_list)
+        steam_deals_list = await get_deals(amount=settings.STEAM_DEALS_AMOUNT, store='steam')
+        gog_deals_list = await get_deals(amount=settings.GOG_DEALS_AMOUNT, store='gog')
+        scheduled_tasks_cog: ScheduledTasks = bot.get_cog("ScheduledTasks")
+        await scheduled_tasks_cog.deals_task(guild, steam_deals_list + gog_deals_list)
+    except discord.errors.Forbidden:
+        logging.info(f'Leaving guild {guild.name} because of insufficient permissions')
+        await guild.leave()
+        return
 
 
 @bot.event
