@@ -8,7 +8,7 @@ This is yet another bot for Discord that tracks deals for games. Unlike the othe
 
 The main priority in creating this bot was to minimize effort the user has to make, so for the most part the bot handles things by itself, but it doesn't mean, that there aren't any commands available!
 
-It has it's own schedule, so everyday at the same hour (between 12:00 UTC and 13:00 UTC) it cleans the channels and posts new deals there. That way anyone who enters the channel will only see deals that are still available for purchase. The time can be changed by server administrator.
+It has it's own schedule, so everyday at the same hour (default is 12:00 UTC) it cleans the channels and posts new deals there. That way anyone who enters the channel will only see deals that are still available for purchase. The time can be changed by server administrator.
 
 <p align="center">
   <img src=https://i.imgur.com/c7xNGn8.gif width="480" height="480">
@@ -18,11 +18,11 @@ Because Discord is somewhat of a limited frontend, the bot is also limited in am
 
 ### Built With
 * [Python](https://www.python.org)
-* [PostgreSQL] (https://www.postgresql.org)
+* [PostgreSQL](https://www.postgresql.org)
 * [discord.py](https://pypi.org/project/discord.py)
-* [SQLAlchemy] (https://www.sqlalchemy.org)
+* [SQLAlchemy](https://www.sqlalchemy.org)
 * [aiohttp](https://pypi.org/project/aiohttp)
-* [databases] (https://pypi.org/project/databases)
+* [databases](https://pypi.org/project/databases)
 * [CheapShark API](https://apidocs.cheapshark.com)
 
 ## How to use
@@ -35,13 +35,15 @@ You are free to rename the channels as you wish, and if you happen to delete one
 
 It is **highly recommended** to mute the category which the channels are assigned to, since the bot is spamming them a lot.
 
+**IMPORTANT NOTE:** All the prices used within the commands are in **USD**.
+
 ### Available commands
 
 | Command | Subcommand | Arguments               | Required permissions | Description                                                                                                                                                                                                                                                                                                                                                    |
 |---------|------------|-------------------------|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | update  |            | *[store]* *[deals_amount]*  | Administrator        | Update specific store channel with amount of deals specified by user. <br/> If no arguments provided, updates all stores with 60 deals. <br/><br/>  *[store]* - optional, can be either steam, gog or all. Default is all. <br/> *[deals_amount]* - optional, amount of deals to send across all channels. Default is 60. Maximum value is 200. |
-| random  |            | *[min_price]*             |                      | Posts random deal in the channel, which the command has been invoked in. <br/><br/> *[min_price]* - optional, minimal sale price of the deal.                                                                                                                                                                                                                    |
-| flip    |            | *[min_price]* *[max_price]* |                      | Posts a flipbook of deals in the channel, which the command has been invoked in. <br/> Flipbook is assigned to the user that requested for it, so only he can interact with it. <br/><br/> *[min_price]* - optional, minimal sale price of deals in flipbook. <br/> *[max_price]* - optional, maximum sale price of deals in flipbook.                             |
+| random  |            | *[min_price]*             |                      | Posts random deal in the channel, which the command has been invoked in. <br/><br/> *[min_price]* - optional, minimal sale price of the deal. Default is 0.                                                                                                                                                                                                                   |
+| flip    |            | *[min_price]* *[max_price]* |                      | Posts a flipbook of deals in the channel, which the command has been invoked in. <br/> Flipbook is assigned to the user that requested for it, so only he can interact with it. <br/> It gets automatically deleted, when no one reacted with it for 2 minutes. <br/><br/> *[min_price]* - optional, minimal sale price of deals in flipbook. Default is 0. <br/> *[max_price]* - optional, maximum sale price of deals in flipbook. Default is 60.                             |
 | auto    | enable     |                         | Administrator        | Enables daily delivery of deals in proper channels.                                                                                                                                                                                                                                                                                                            |
 | auto    | disable    |                         | Administrator        | Disables daily delivery of deals in proper channels.                                                                                                                                                                                                                                                                                                           |
 | auto    | time       | *[hour]*                  | Administrator        | Informs about the set up hour of the day that the deals are going to be sent at. <br/> Also changes the hour if proper argument is provided. <br/><br/>  *[hour]* - optional, must be an integer between 0 and 23. <br/>  If specified, bot will change the hour of delivery (UTC format) on the server. Default is 12:00 UTC.                                   |
@@ -49,8 +51,26 @@ It is **highly recommended** to mute the category which the channels are assigne
 
 ## Examples
 
+### Update command
+`!gd update`: Updates all channels with 60 deals (distributed across all channels).
+
+`!gd update steam 100`: Updates only Steam channels with 100 deals (distributed across both Steam channels).
+
+`!gd update gog 100`: Updates only GOG channels with 100 deals (distributed across both GOG channels).
+
+
 ### Flip command
+`!gd flip`: Creates a flip book with deals.
+
+`!gd flip 10`: Creates a flip book with deals, that minimal sale price is 10 USD.
+
+`!gd flip 5 20`: Creates a flip book with deals, that minimal sale price is 5 USD and maximum sale price is 20 USD.
+
 <img src=https://i.imgur.com/ZuYLZEl.gif width="480" height="326">
 
 ### Random command
+`!gd random`: Posts a random deal.
+
+`!gd random 10`: Posts a random deal, which minimal sale price is 10 USD.
+
 <img src=https://i.imgur.com/mivYnRt.gif width="480" height="326">
