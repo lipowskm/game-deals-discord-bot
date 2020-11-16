@@ -21,12 +21,14 @@ class ScheduledTasks(commands.Cog):
         self.bot: commands.Bot = bot
         self.deals_schedule.start()
 
-    @tasks.loop(minutes=60)
+    @tasks.loop(minutes=1)
     async def deals_schedule(self):
         """Every hour sends deals to every guild asynchronously which has this hour set up as a delivery hour.
 
         :return: None
         """
+        if not datetime.now().minute == 0:
+            return
         steam_deals_list = await get_deals(amount=settings.STEAM_DEALS_AMOUNT, store='steam')
         gog_deals_list = await get_deals(amount=settings.GOG_DEALS_AMOUNT, store='gog')
         coroutines = []
