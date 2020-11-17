@@ -1,15 +1,15 @@
 import asyncio
 import logging
-from asyncpg import Record
 from datetime import datetime
 from typing import List
 
 import discord
+from asyncpg import Record
 from discord.ext import commands, tasks
 
 import crud
 import settings
-from deal import get_deals, get_embed_from_deal, Deal
+from deal import Deal, get_deals, get_embed_from_deal
 
 guilds__running_tasks: dict = {}
 
@@ -87,7 +87,7 @@ class ScheduledTasks(commands.Cog):
             await channel.send(content=f"```Last updated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')} UTC```")
             for deal in deals_list:
                 await channel.send(embed=get_embed_from_deal(deal))
-            await channel.send(content=f"```That's it for today :(```")
+            await channel.send(content="```That's it for today :(```")
         except discord.errors.NotFound:
             logging.error(f'Channel {channel.name} has been deleted while the bot was working on {channel.guild}')
             new_channel = await channel.guild.create_text_channel(name=channel.name, category=channel.category)

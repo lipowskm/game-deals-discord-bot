@@ -1,7 +1,8 @@
-import settings
 from typing import List
 
 import discord
+
+import settings
 
 
 async def initialize_channels(guild: discord.Guild) -> (discord.CategoryChannel, List[discord.TextChannel]):
@@ -69,9 +70,8 @@ def colour_picker(percentage: int) -> discord.Colour:
     """
     if percentage < 25:
         return discord.Colour.light_grey()
-    elif 25 <= percentage < 50:
+    if 25 <= percentage < 50:
         return discord.Colour.green()
-    elif 50 <= percentage < 75:
+    if 50 <= percentage < 75:
         return discord.Colour.blue()
-    else:
-        return discord.Colour.gold()
+    return discord.Colour.gold()

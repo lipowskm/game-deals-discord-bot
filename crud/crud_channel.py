@@ -1,7 +1,6 @@
-from typing import List
+from typing import List, Union
 
 import discord
-from typing import Union
 
 import crud
 import settings

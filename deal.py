@@ -1,18 +1,17 @@
-from typing import List
+import random
 from dataclasses import dataclass
+from typing import List
 
 import aiohttp
 import discord
-import random
-import settings
 
+import settings
 from utils import calculate_pages, colour_picker, replace_all
 
 
 class NoDealsFound(Exception):
     """Exception to raise when no deals are found in the API.
     """
-    pass
 
 
 @dataclass
@@ -98,7 +97,7 @@ async def get_deals(store: str = 'all',
     if min_steam_rating:
         url += f'&steamRating={min_steam_rating}'
     if aaa:
-        url += f'&AAA=1'
+        url += '&AAA=1'
 
     pages = calculate_pages(amount, 60)
     session = aiohttp.ClientSession()
@@ -111,8 +110,6 @@ async def get_deals(store: str = 'all',
             if e == 0:
                 await session.close()
                 raise NoDealsFound('No deals found from provided API filters')
-            else:
-                break
         for i, record in enumerate(response_list):
             if 60 > amount == i:
                 break

@@ -1,5 +1,7 @@
-from typing import List, Generic, TypeVar, Type
+from typing import Generic, List, Type, TypeVar
+
 from asyncpg import Record
+
 from database.base import Base
 from database.session import database
 

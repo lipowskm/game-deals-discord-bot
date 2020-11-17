@@ -1,14 +1,13 @@
 import asyncio
 
 import discord
+from discord.ext import commands
 
 import crud
 import settings
-from discord.ext import commands
-
 import strings
-from deal import get_embed_from_deal, NoDealsFound, get_random_deal, get_deals
-from tasks import guilds__running_tasks, ScheduledTasks
+from deal import NoDealsFound, get_deals, get_embed_from_deal, get_random_deal
+from tasks import ScheduledTasks, guilds__running_tasks
 
 
 class Commands(commands.Cog):
@@ -45,7 +44,7 @@ class Commands(commands.Cog):
             else:
                 raise discord.ext.commands.BadArgument
         except NoDealsFound:
-            await ctx.send(f'```Could not find any deals to show```')
+            await ctx.send('```Could not find any deals to show```')
 
     @update.error
     async def update_handler(self, ctx: commands.Context, error):
@@ -96,7 +95,7 @@ class Commands(commands.Cog):
         try:
             deals_list = await get_deals(min_price=min_price, max_price=max_price, amount=60)
         except NoDealsFound:
-            await ctx.send(content=f'```No deals found within specified price range```')
+            await ctx.send(content='```No deals found within specified price range```')
             return
         start_message = await ctx.send(content=f"```Here's a flipbook of deals for you, {ctx.author.name}!```")
         pages = len(deals_list)
@@ -179,10 +178,10 @@ class Commands(commands.Cog):
     async def enable(self, ctx: commands.Context):
         db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
         if db_guild['auto']:
-            await ctx.send(content=f'```fix\nAutomatic updates are already enabled```')
+            await ctx.send(content='```fix\nAutomatic updates are already enabled```')
             return
         await crud.guild.update(db_guild['id'], {'auto': True})
-        await ctx.send(content=f'```Automatic updates have been enabled```')
+        await ctx.send(content='```Automatic updates have been enabled```')
 
     @auto.command(name='disable',
                   brief=strings.COMMAND_DISABLE_BRIEF,
@@ -190,10 +189,10 @@ class Commands(commands.Cog):
     async def disable(self, ctx: commands.Context):
         db_guild = await crud.guild.get_by_discord_id(ctx.guild.id)
         if not db_guild['auto']:
-            await ctx.send(content=f'```fix\nAutomatic updates are already disabled```')
+            await ctx.send(content='```fix\nAutomatic updates are already disabled```')
             return
         await crud.guild.update(db_guild['id'], {'auto': False})
-        await ctx.send(content=f'```Automatic updates have been disabled```')
+        await ctx.send(content='```Automatic updates have been disabled```')
 
     @auto.command(name='time',
                   brief=strings.COMMAND_TIME_BRIEF,
@@ -204,7 +203,7 @@ class Commands(commands.Cog):
             await ctx.send(content=f"```Automatic updates are scheduled for {db_guild['time']}:00 UTC```")
             return
         if not 0 <= hour < 24:
-            await ctx.send(content=f'```fix\nTime of auto update has to be a number between 0 and 23```')
+            await ctx.send(content='```fix\nTime of auto update has to be a number between 0 and 23```')
             return
         await crud.guild.update_by_discord_id(ctx.guild.id, {'time': hour})
         await ctx.send(content=f'```Update time has been set to {hour}:00 UTC```')

@@ -1,5 +1,6 @@
+from typing import Tuple, Union
+
 import discord
-from typing import Union, Tuple
 
 import crud
 from crud.base import CRUDBase

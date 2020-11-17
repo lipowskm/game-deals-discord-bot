@@ -1,16 +1,17 @@
+import logging
+
+import discord
+from discord.ext import commands
+
 import crud
-from commands import Commands
-import settings
 import database.base
+import settings
+from commands import Commands
 from database.base import Base
 from database.session import database, engine
 from deal import get_deals
 from tasks import ScheduledTasks
-import logging
 from utils import initialize_channels
-
-import discord
-from discord.ext import commands
 
 bot = commands.Bot(command_prefix=settings.PREFIX + ' ')
 
