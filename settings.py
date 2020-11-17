@@ -21,7 +21,7 @@ CHANNELS_SETTINGS = {
     },
     STEAM_AAA_CHANNEL: {
         'min_retail_price': 29,
-        'max_retail_price': 60,
+        'max_retail_price': 1000,
         'store': 'steam'
     },
     GOG_CHANNEL: {
@@ -31,7 +31,7 @@ CHANNELS_SETTINGS = {
     },
     GOG_AAA_CHANNEL: {
         'min_retail_price': 29,
-        'max_retail_price': 60,
+        'max_retail_price': 1000,
         'store': 'gog'
     }
 }
