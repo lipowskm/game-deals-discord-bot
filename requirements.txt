@@ -2,7 +2,7 @@ asyncpg
 databases
 sqlalchemy
 PyYAML
-aiohttp==3.7.2
+aiohttp
 async-timeout==3.0.1
 attrs==20.2.0
 chardet==3.0.4
