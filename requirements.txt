@@ -9,7 +9,7 @@ chardet==3.0.4
 croniter==0.3.36
 discord.py==1.5.1
 idna==2.10
-multidict==5.0.0
+multidict==4.7.6
 natsort==7.0.1
 psycopg2
 python-dateutil==2.8.1
