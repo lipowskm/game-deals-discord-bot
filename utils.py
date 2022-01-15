@@ -16,8 +16,8 @@ async def initialize_channels(guild: discord.Guild) -> (discord.CategoryChannel,
         category = await guild.create_category(name=settings.CATEGORY)
     else:
         category = discord.utils.get(guild.categories, name=settings.CATEGORY)
-    for role in guild.roles:
-        await category.set_permissions(role, send_messages=False)
+#     for role in guild.roles:
+#         await category.set_permissions(role, send_messages=False)
     await category.set_permissions(guild.me, send_messages=True)
 
     channels_list = []
